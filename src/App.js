@@ -17,49 +17,55 @@ function App() {
   }
 
   useEffect(() => {
-    console.log(difficulty);
+    if (round !== 0 && round % 5 === 0 && difficulty <= 5)
+    {
+      console.log(`difficulty increased ... round: ${round} difficulty: ${difficulty}`);
+      setDifficulty(currentDifficulty => currentDifficulty + 1);
+    }
+
   }, [round])
 
   useEffect(() => {
-    if (selectedBlocks.length === difficulty) {
+    if (selectedBlocks.length < difficulty)
+      return;
 
-      console.log(selectedBlocks);
-      console.log(targetBlocks);
-
-      let points = 0;
-      if (selectedBlocks.every(e => targetBlocks.includes(e)))
-      {
-        points = 1;
-      }
-
-      setPoints(p => p + points);
-      setTargetBlocks([]);
-      setSelectedBlocks([]);
+    let points = 0;
+    if (selectedBlocks.every(e => targetBlocks.includes(e)))
+    {
+      points = difficulty - 1;
       setRound(round => round + 1);
     }
-  }, [selectedBlocks, targetBlocks]);
+
+    setPoints(p => p + points);
+    setTargetBlocks([]);
+    setSelectedBlocks([]);
+  }, [selectedBlocks]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setSelectedBlocks([]);
 
-      setRound(round => round + 1)
+      const blocks = [];
 
-      const block1 = getRandomBlock();
-      let block2 = getRandomBlock();
-      while (block2 === block1 || targetBlocks.includes(block2) || selectedBlocks.includes(block2)) {
-        block2 = getRandomBlock();
+      for (let i = 0; i < difficulty; i++) {
+        let nextBlock = getRandomBlock();
+        while (targetBlocks.includes(nextBlock) || targetBlocks.includes(nextBlock) || selectedBlocks.includes(nextBlock)) {
+          nextBlock = getRandomBlock();
+        }
+        blocks.push(nextBlock);
       }
-      setFlashingBlocks([block1, block2]);
-      setTargetBlocks([block1, block2]);
+      
+      setFlashingBlocks(blocks);
+      setTargetBlocks(blocks);
+
       setTimeout(() => {
         setFlashingBlocks([]);
       }, 500);
-    }, 5000);
+    }, 3000);
     return () => {
       clearInterval(interval);
     }
-  }, [selectedBlocks, flashingBlocks]);
+  }, [selectedBlocks, targetBlocks, difficulty]);
 
   function getRandomBlock() {
     return Math.floor(Math.random() * 100);
