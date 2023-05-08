@@ -5,6 +5,10 @@
   grid-gap: 5px;
 }
 
+.hidden {
+  display: none;
+}
+
 .block {
   width: 50px;
   height: 50px;
@@ -17,5 +21,5 @@
 }
 
 .flash {
-  background-color: red;
+  background-color: #00fca3;
 }

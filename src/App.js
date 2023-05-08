@@ -5,10 +5,15 @@ function App() {
   const [selectedBlocks, setSelectedBlocks] = useState([]);
   const [flashingBlocks, setFlashingBlocks] = useState([]);
   const [targetBlocks, setTargetBlocks] = useState([]);
-  const [checkSelectedBlocks] = useState(null);
   const [points, setPoints] = useState(0);
-  const [round, setRound] = useState(0);
+  const [round, setRound] = useState(1);
   const [difficulty, setDifficulty] = useState(2);
+  const [running, setRunning] = useState(true);
+
+  const DIFFICULTY_INCREASE_PER_ROUNDS = 5;
+  const MAX_DIFFICULTY = 3;
+  const GAME_SIZE = 10;
+  const MAX_ROUNDS = 15;
 
   function handleClick(i) {
     if (selectedBlocks.length < difficulty) {
@@ -16,33 +21,43 @@ function App() {
     }
   }
 
+  // Upgrade difficulty each 5 rounds
   useEffect(() => {
-    if (round !== 0 && round % 5 === 0 && difficulty <= 5)
+    if (round % DIFFICULTY_INCREASE_PER_ROUNDS === 0 && difficulty <= MAX_DIFFICULTY)
     {
-      console.log(`difficulty increased ... round: ${round} difficulty: ${difficulty}`);
       setDifficulty(currentDifficulty => currentDifficulty + 1);
+    }
+
+    // !!! GAME ENDED !!!
+    if (round - 1 === MAX_ROUNDS)
+    {
+      console.log("Game has ended with player having ..." + points);
+      setRunning(false);
     }
 
   }, [round])
 
+  // Each time move/selection is made
   useEffect(() => {
     if (selectedBlocks.length < difficulty)
       return;
 
-    let points = 0;
     if (selectedBlocks.every(e => targetBlocks.includes(e)))
     {
-      points = difficulty - 1;
-      setRound(round => round + 1);
+      setPoints(p => p + difficulty - 1);
     }
 
-    setPoints(p => p + points);
+    setRound(round => round + 1);
     setTargetBlocks([]);
     setSelectedBlocks([]);
   }, [selectedBlocks]);
 
+  // If difficulty changes, selection is made or new target blocks are generated
   useEffect(() => {
     const interval = setInterval(() => {
+      if (!running)
+        return;
+
       setSelectedBlocks([]);
 
       const blocks = [];
@@ -65,14 +80,14 @@ function App() {
     return () => {
       clearInterval(interval);
     }
-  }, [selectedBlocks, targetBlocks, difficulty]);
+  }, [selectedBlocks, targetBlocks, difficulty, running]);
 
   function getRandomBlock() {
-    return Math.floor(Math.random() * 100);
+    return Math.floor(Math.random() * GAME_SIZE * GAME_SIZE);
   }
 
   const blocks = [];
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < GAME_SIZE * GAME_SIZE; i++) {
     blocks.push(
       <div key={i} className={`block ${selectedBlocks.includes(i) ? "selected" : ""} ${flashingBlocks.includes(i) ? "flash" : ""}`} onClick={() => handleClick(i)}></div>
     );
@@ -83,7 +98,7 @@ function App() {
       <div>
         Points: {points}
       </div>
-      <div className="game-board" onMouseDown={checkSelectedBlocks}>
+      <div className={`game-board ${!running ? "hidden" : ""}`}>
         {blocks}
       </div>
     </div>
